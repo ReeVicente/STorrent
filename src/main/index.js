@@ -1,9 +1,8 @@
 'use strict'
 
-import { app, BrowserWindow, ipcMain } from 'electron'
+import { app, BrowserWindow, ipcMain, Menu, Tray } from 'electron'
 import WebTorrent from 'webtorrent'
 import fs from 'fs'
-
 /**
  * Set `__static` path to static files in production
  * https://simulatedgreg.gitbooks.io/electron-vue/content/en/using-static-assets.html
@@ -12,6 +11,7 @@ if (process.env.NODE_ENV !== 'development') {
   global.__static = require('path').join(__dirname, '/static').replace(/\\/g, '\\\\')
 }
 
+var tray
 let mainWindow
 const winURL = process.env.NODE_ENV === 'development'
   ? `http://localhost:9080`
@@ -33,8 +33,52 @@ function createWindow () {
 
   mainWindow.loadURL(winURL)
 
-  mainWindow.on('closed', () => {
-    mainWindow = null
+  var iconpath = '/Users/renan/Code/storrent/icon.png'
+  tray = new Tray(iconpath)
+
+  var contextMenu = Menu.buildFromTemplate([
+    {
+      label: 'Show App',
+      click: function () {
+        mainWindow.show()
+      }
+    },
+    {
+      label:
+      'Quit',
+      click: function () {
+        app.isQuiting = true
+        app.quit()
+      }
+    }
+  ])
+
+  console.log(client.torrents)
+
+  setInterval(function () {
+    if (client.torrents.length !== 0 && client.progress !== 0) {
+      tray.setToolTip('STorrent [Total Progress: ' + (client.progress * 100).toFixed(1) + '% ]')
+    } else {
+      tray.setToolTip('STorrent')
+    }
+  }, 2000)
+
+  tray.setContextMenu(contextMenu)
+
+  // mainWindow.on('closed', () => {
+  //   mainWindow = null
+  // })
+
+  mainWindow.on('close', function (event) {
+    if (!app.isQuiting) {
+      event.preventDefault()
+      mainWindow.hide()
+    }
+    return false
+  })
+
+  mainWindow.on('show', function () {
+    tray.setHighlightMode('always')
   })
 
   startTorrentManager()
@@ -67,7 +111,7 @@ function addTorrent (t, dir) {
       console.log(err)
     })
 
-    console.log(torrent)
+    tray.setToolTip('STorrent [Total Progress: ' + (client.progress * 100).toFixed(1) + '% ]')
 
     // v.client.seed(torrent.files, function (t) {
     //
@@ -77,11 +121,11 @@ function addTorrent (t, dir) {
 
 app.on('ready', createWindow)
 
-app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') {
-    app.quit()
-  }
-})
+// app.on('window-all-closed', () => {
+//   if (process.platform !== 'darwin') {
+//     app.quit()
+//   }
+// })
 
 app.on('activate', () => {
   if (mainWindow === null) {

@@ -21,7 +21,7 @@
       <div class="right-side">
         <div class="torrent-buttons-bar">
           <button class="button button-outline" @click="showModal = true"><i class="fa fa-magnet"></i> Magnet</button>
-          <button class="button button-outline"><i class="fa fa-plus"></i> Torrent</button>
+          <button class="button button-outline" @click="openTorrent()"><i class="fa fa-plus"></i> Torrent</button>
         </div>
         <div class="container">
           <div class="torrent-client">
@@ -40,7 +40,7 @@
             </thead>
             <tbody>
 
-              <tr v-for="torrent in torrents">
+              <tr v-for="(torrent, index) in torrents" @contextmenu="openMenu(index)">
                 <td><input type="checkbox" v-model="torrent.checked"></td>
                 <td>{{torrent.name}}</td>
                 <td>
@@ -65,6 +65,13 @@
 
       </div>
     </main>
+
+    <context-menu id="context-menu" ref="ctxMenu">
+      <li>Pausar</li>
+      <li>Remover</li>
+      <li>Copiar link magnetico</li>
+    </context-menu>
+
     <modal v-if="showModal" @close="openMagnetic(link)">
     <!--
       you can use custom content here to overwrite
@@ -85,6 +92,7 @@
   import WebTorrent from 'webtorrent'
   import dragDrop from 'drag-drop'
   import moment from 'moment'
+  import contextMenu from 'vue-context-menu'
 
   import {EventEmitter} from 'events'
   import {remote, ipcRenderer} from 'electron'
@@ -100,16 +108,22 @@
       return {
         torrents: [],
         client: new WebTorrent(),
-        showModal: false
+        showModal: false,
+        openContextMenu: false
       }
     },
     components: {
       SystemInformation,
-      Modal
+      Modal,
+      contextMenu
     },
     methods: {
       open (link) {
         this.$electron.shell.openExternal(link)
+      },
+      openMenu (index) {
+        this.$refs.ctxMenu.open()
+        console.log(this.$refs.ctxMenu)
       },
       parseTimeRemaining (time) {
         var remaining = moment.duration(time / 1000, 'seconds').humanize()
@@ -140,6 +154,15 @@
         var dir = remote.dialog.showOpenDialog({properties: ['openDirectory']})
         // console.log(dir)
         v.addTorrent(link, dir[0], 2)
+      },
+      openTorrent: function () {
+        var file = remote.dialog.showOpenDialog({
+          filters: [
+            {name: 'Torrent', extensions: ['torrent']}
+          ]
+        })
+        var dir = remote.dialog.showOpenDialog({properties: ['openDirectory']})
+        this.addTorrent(file[0], dir[0], 1)
       }
     },
     created: function () {
@@ -148,7 +171,7 @@
       // Get torrents
       setInterval(() => {
         v.torrents = getTorrents()
-        console.log(getTorrents())
+        // console.log(getTorrents())
       }, 1000)
 
       // Enable DragDrop
@@ -223,11 +246,18 @@
     background: #051e44;
   }
 
+  #context-menu li {
+    font-size: 16px;
+    padding-left: 15px;
+  }
+
+  #context-menu li:hover{
+    background: #f4f4f4;
+  }
 
   #wrapper {
     background: #f4f4f4;
     height: 100vh;
-
     width: 100vw;
   }
 
