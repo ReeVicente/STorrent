@@ -1,6 +1,8 @@
 'use strict'
 
-import { app, BrowserWindow } from 'electron'
+import { app, BrowserWindow, ipcMain } from 'electron'
+import WebTorrent from 'webtorrent'
+import fs from 'fs'
 
 /**
  * Set `__static` path to static files in production
@@ -14,6 +16,10 @@ let mainWindow
 const winURL = process.env.NODE_ENV === 'development'
   ? `http://localhost:9080`
   : `file://${__dirname}/index.html`
+
+global.getTorrents = function () {
+  return client.torrents
+}
 
 function createWindow () {
   /**
@@ -29,6 +35,43 @@ function createWindow () {
 
   mainWindow.on('closed', () => {
     mainWindow = null
+  })
+
+  startTorrentManager()
+}
+
+function bufferFile (path) {
+  return fs.readFileSync(path)
+}
+
+var client = new WebTorrent()
+function startTorrentManager () {
+  ipcMain.on('addTorrent', (event, data) => {
+    if (data.type === 1) {
+      addTorrent(bufferFile(data.torrent), data.dir)
+    } else {
+      // if is magnet
+      addTorrent(data.torrent, data.dir)
+    }
+  })
+}
+
+function addTorrent (t, dir) {
+  client.add(t, { path: dir }, function (torrent) {
+    console.log('Client is downloading:', torrent.infoHash)
+    torrent.on('done', function () {
+      console.log('torrent download finished')
+    })
+
+    torrent.on('error', function (err) {
+      console.log(err)
+    })
+
+    console.log(torrent)
+
+    // v.client.seed(torrent.files, function (t) {
+    //
+    // })
   })
 }
 

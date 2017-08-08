@@ -33,7 +33,7 @@
             </thead>
             <tbody>
 
-              <tr v-for="torrent in client.torrents">
+              <tr v-for="torrent in torrents">
                 <td><input type="checkbox" v-model="torrent.checked"></td>
                 <td>{{torrent.name}}</td>
                 <td>
@@ -79,26 +79,20 @@
   import dragDrop from 'drag-drop'
   import moment from 'moment'
 
-  var Client = require('bittorrent-tracker')
+  import {EventEmitter} from 'events'
+  import {remote, ipcRenderer} from 'electron'
+  // import lodash from 'lodash'
 
-  var requiredOpts = {
-    infoHash: new Buffer('012345678901234567890'), // hex string or Buffer
-    peerId: new Buffer('01234567890123456789'), // hex string or Buffer
-    announce: [], // list of tracker server urls
-    port: 6881 // torrent client port, (in browser, optional)
-  }
+  var getTorrents = remote.getGlobal('getTorrents')
 
-  import {remote} from 'electron'
+  EventEmitter.defaultMaxListeners = 0
 
   export default {
     name: 'landing-page',
     data: function () {
       return {
-        torrents: [
-          {
-            id: null
-          }
-        ],
+        torrents: [],
+        client: new WebTorrent(),
         showModal: false
       }
     },
@@ -130,38 +124,30 @@
         unit = units[exponent]
         return (neg ? '-' : '') + num + ' ' + unit
       },
-      addTorrent: function (t, dir) {
-        var v = this
-        v.client.add(t, { path: dir }, function (torrent) {
-          console.log('Client is downloading:', torrent.infoHash)
-          torrent.on('done', function () {
-            console.log('torrent download finished')
-          })
-
-          torrent.on('error', function (err) {
-            console.log(err)
-          })
-          // v.client.seed(torrent.files, function (t) {
-          //
-          // })
-        })
+      addTorrent: function (t, dir, type) {
+        ipcRenderer.send('addTorrent', {torrent: t, dir: dir, type: type})
       },
       openMagnetic: function (link) {
         var v = this
         v.showModal = false
         var dir = remote.dialog.showOpenDialog({properties: ['openDirectory']})
         // console.log(dir)
-        v.addTorrent(link, dir[0])
+        v.addTorrent(link, dir[0], 2)
       }
     },
     created: function () {
       var v = this
 
+      // Get torrents
+      setInterval(() => {
+        v.torrents = getTorrents()
+        console.log(getTorrents())
+      }, 1000)
+
+      // Enable DragDrop
       dragDrop('body', function (files) {
         var dir = remote.dialog.showOpenDialog({properties: ['openDirectory']})
-        console.log(dir)
-
-        v.addTorrent(files[0], dir[0])
+        v.addTorrent(files[0].path, dir[0], 1)
       })
 
       // Sintel, a free, Creative Commons movie
@@ -229,7 +215,7 @@
     transform: translateY(43%);
   }
 
-  table tr:hover{
+  table tbody tr:hover{
     background: #d3d3d3;
   }
 
