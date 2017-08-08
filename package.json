@@ -1,7 +1,7 @@
 {
-  "name": "storrent",
+  "name": "STorrent",
   "version": "0.0.0",
-  "author": "",
+  "author": "Renan Vicentte",
   "description": "A Torrent Client",
   "license": null,
   "main": "./dist/electron/main.js",

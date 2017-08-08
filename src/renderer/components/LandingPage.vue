@@ -4,10 +4,17 @@
     <main>
       <div class="left-side">
         <div class="sidebar">
-          <span class="title">
-            <!-- Welcome to your new project! -->
-          </span>
-
+          <div class="title">
+            <h1>STorrent</h1>
+          </div>
+          <div class="sidebar-content">
+            <div class="menu-item">
+              <i class="fa fa-download"></i>&nbsp Todos os arquivos
+            </div>
+            <div class="menu-item">
+              <i class="fa fa-play-circle"></i>&nbsp Mídias
+            </div>
+          </div>
         </div>
       </div>
 
@@ -191,7 +198,31 @@
     background: #0D47A1;
     width: 25vw;
     height: 100vh;
+    color: white;
   }
+
+  .sidebar .title{
+    height: 60px;
+    background: #051e44;
+  }
+
+
+  .sidebar .title h1{
+    height: 60px;
+    line-height: 40px;
+    font-size: 1.8em;
+    margin: 0;
+  }
+
+  .sidebar .title h1,
+  .sidebar .menu-item{
+    padding: 10px 30px;
+  }
+
+  .sidebar .menu-item:hover{
+    background: #051e44;
+  }
+
 
   #wrapper {
     background: #f4f4f4;
@@ -304,18 +335,6 @@
   .welcome {
     color: #555;
     font-size: 23px;
-    margin-bottom: 10px;
-  }
-
-  .title {
-    color: #2c3e50;
-    font-size: 20px;
-    font-weight: bold;
-    margin-bottom: 6px;
-  }
-
-  .title.alt {
-    font-size: 18px;
     margin-bottom: 10px;
   }
 
