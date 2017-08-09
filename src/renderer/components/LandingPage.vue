@@ -67,12 +67,13 @@
     </main>
 
     <context-menu id="context-menu" ref="ctxMenu">
-      <li>Pausar</li>
-      <li>Remover</li>
+      <li @click='pause()'>Pausar</li>
+      <li @click='remove()'>Remover</li>
+      <li @click='removeWithData()'>Remover torrent + dados</li>
       <li>Copiar link magnetico</li>
     </context-menu>
 
-    <modal v-if="showModal" @close="openMagnetic(link)">
+    <modal v-if="showModal" @close="showModal = false" @confirm="openMagnetic(link)">
     <!--
       you can use custom content here to overwrite
       default content
@@ -109,7 +110,8 @@
         torrents: [],
         client: new WebTorrent(),
         showModal: false,
-        openContextMenu: false
+        openContextMenu: false,
+        contextIndex: 0
       }
     },
     components: {
@@ -123,7 +125,17 @@
       },
       openMenu (index) {
         this.$refs.ctxMenu.open()
-        console.log(this.$refs.ctxMenu)
+        this.contextIndex = index
+        console.log(this.contextIndex)
+      },
+      pause () {
+        ipcRenderer.send('pause', this.contextIndex)
+      },
+      remove () {
+        ipcRenderer.send('remove', this.contextIndex)
+      },
+      removeWithData () {
+        ipcRenderer.send('removeWithData', this.contextIndex)
       },
       parseTimeRemaining (time) {
         var remaining = moment.duration(time / 1000, 'seconds').humanize()
@@ -331,36 +343,6 @@
   .torrent-client{
     height: 70vh;
   }
-
-  .modal-mask {
-    position: fixed;
-    z-index: 9998;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, .5);
-    display: table;
-    transition: opacity .3s ease;
-  }
-
-  .modal-wrapper {
-    display: table-cell;
-    vertical-align: middle;
-  }
-
-  .modal-container {
-    width: 600px;
-    margin: 0px auto;
-    padding: 20px 30px;
-    background-color: #fff;
-    border-radius: 2px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, .33);
-    transition: all .3s ease;
-    font-family: Helvetica, Arial, sans-serif;
-  }
-
-
 
   .welcome {
     color: #555;

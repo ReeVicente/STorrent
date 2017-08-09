@@ -67,6 +67,7 @@
     "milligram": "^1.3.0",
     "moment": "^2.18.1",
     "parse-torrent": "^5.8.3",
+    "rimraf": "^2.6.1",
     "vue": "^2.3.3",
     "vue-context-menu": "^2.0.6",
     "vue-electron": "^1.0.6",

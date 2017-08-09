@@ -3,6 +3,8 @@
 import { app, BrowserWindow, ipcMain, Menu, Tray } from 'electron'
 import WebTorrent from 'webtorrent'
 import fs from 'fs'
+import rimraf from 'rimraf'
+
 /**
  * Set `__static` path to static files in production
  * https://simulatedgreg.gitbooks.io/electron-vue/content/en/using-static-assets.html
@@ -97,6 +99,29 @@ function startTorrentManager () {
       // if is magnet
       addTorrent(data.torrent, data.dir)
     }
+  })
+
+  ipcMain.on('pause', (event, data) => {
+    if (client.torrents[data].downloadSpeed !== 0) {
+      client.torrents[data].deselect(0, client.torrents[data].pieces.length - 1, false)
+    } else {
+      client.torrents[data].select(0, client.torrents[data].pieces.length - 1, false)
+    }
+  })
+
+  ipcMain.on('remove', (event, data) => {
+    client.torrents[data].destroy(function () {
+      console.log('destroyed')
+    })
+  })
+
+  ipcMain.on('removeWithData', (event, data) => {
+    var path = require('path').join(client.torrents[data].path, client.torrents[data].name)
+    console.log(path)
+    client.torrents[data].destroy(function () {
+      rimraf(path, function () {
+      })
+    })
   })
 }
 
